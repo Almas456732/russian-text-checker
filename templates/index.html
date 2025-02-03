@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка орфографии и грамматики</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка орфографии и грамматики</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" onsubmit="showLoader()">
+            <textarea name="text" placeholder="Введите текст для проверки..." required>{{ original_text or '' }}</textarea>
+            <button type="submit">Проверить</button>
+        </form>
+
+        {% if grammar_errors or spelling_errors or corrected_text %}
+        <div class="result">
+            <h2>Результат проверки:</h2>
+            
+            {% if grammar_errors or spelling_errors %}
+                <div class="errors">
+                    {% if grammar_errors %}
+                        <h3>Грамматические ошибки:</h3>
+                        <ul>
+                        {% for error in grammar_errors %}
+                            <li class="error-item">
+                                <span class="error-word">{{ error['bad'] }}</span> →
+                                <span class="suggestion">{{ error['better'][0] }}</span>
+                                <div class="error-description">
+                                    {{ error['description'].get('ru', error['description'].get('en', 'Нет описания')) }}
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                    
+                    {% if spelling_errors %}
+                        <h3>Орфографические ошибки:</h3>
+                        <ul>
+                        {% for error in spelling_errors %}
+                            <li class="error-item">
+                                <span class="error-word">{{ error['bad'] }}</span> →
+                                <span class="suggestion">{{ error['better'][0] }}</span>
+                                <div class="error-description">
+                                    {{ error['description'].get('ru', error['description'].get('en', 'Нет описания')) }}
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="success-message">Ошибок не найдено! Ваш текст грамматически правильный.</div>
+            {% endif %}
+            
+            {% if corrected_text %}
+                <div class="corrected-text">
+                    <h3>Исправленный текст:</h3>
+                    <p>{{ corrected_text }}</p>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function showLoader() {
+            Swal.fire({
+                title: 'Проверка текста...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
